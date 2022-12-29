@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import itertools
+from collections import Counter
 
 # Build the deck of cards
 suits = 'S C H D'.split()
@@ -11,8 +12,8 @@ deck = [list(tup) for tup in itertools.product(values,suits)]
 
 # Calculate the points from combinations of 15
 def fifteens(self):
-    numbers = np.zeros(4)
-    for i in range(4):
+    numbers = np.zeros(len(self))
+    for i in range(len(self)):
         if isinstance(self[i],str):
             if self[i] == 'A': numbers[i] = 1
             else: numbers[i] = 10
@@ -28,13 +29,13 @@ def fifteens(self):
 def pairs(self):
     combos = [tup for tup in itertools.combinations(self,r=2)]
     num_pairs = 0
-    for i in range(6):
+    for i in range(len(combos)):
         if combos[i][0] == combos[i][1]: num_pairs+=1
     return num_pairs*2
 
 def runs(self):
-    numbers = np.zeros(4)
-    for i in range(4):
+    numbers = np.zeros(len(self))
+    for i in range(len(self)):
         if isinstance(self[i],str):
             if self[i] == 'A': numbers[i] = 1
             elif self[i] == 'J': numbers[i] = 11
@@ -47,19 +48,31 @@ def runs(self):
     for i in numbers:
         if i in uniq: dupes.append(i)
         else: uniq.append(i)
-    diff_numbers = [uniq[i+1]-uniq[i] for i in range(len(uniq)-1)]
-    run_size = 3
-    num_runs = 0
-    if len(uniq) >= 3:
-        for i in range(len(diff_numbers)-1):
-            if all(diff_numbers==1):
-                run_size = len(uniq)
-                if (len(dupes) == 2) & (dupes[0] != dupes[-1]): num_runs = 4
-                else: num_runs = 1+len(dupes)
-            
-            # Stil working on code starting here
-            elif (diff_numbers[i] == 1) & (diff_numbers[i+1] == 1):
-                num_runs = 1
+    if len(uniq) >= 3: diff_numbers = [uniq[i+1]-uniq[i] for i in range(len(uniq)-1)]
+    else: uniq = []
+    while len(uniq) >= 3:
+        if all(diff_numbers[i] == 1 for i in range(len(diff_numbers))): break
+        elif len(uniq) == 3:
+            uniq = []
+            break
+        else:
+            for i in range(len(diff_numbers)):
+                if diff_numbers[i] > 1:
+                    if i < 2:
+                        uniq, diff_numbers = uniq[i+1:], diff_numbers[i+1:]
+                    else:
+                        uniq, diff_numbers = uniq[:i+1], diff_numbers[:i]
+                    break
+    run_size = len(uniq)
+    if run_size >= 3:
+        for dupe in dupes:
+            if dupe in uniq: continue
+            else: dupes.remove(dupe)
+        if len(dupes) == 2:
+            if dupes[0] != dupes[1]: num_runs = 4
+            else: num_runs = 3
+        else: num_runs = 1+len(dupes)
+    else: num_runs = 0
     return run_size*num_runs
 
 # Generate a random hand of 6 cards
@@ -67,7 +80,7 @@ hand = random.sample(deck,k=6)
 hand_values = list(range(6))
 for i in range(6):
     hand_values[i] = hand[i][0]
-hand_values = [2,3,3,4,7,7]
+
 # Calculate the highest point total possible using any 4 cards in the hand
 max_hand = []
 max_points = 0
