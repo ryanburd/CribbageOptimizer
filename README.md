@@ -5,5 +5,5 @@ This repository contains an optimizer that determines the best cards for a user 
 ## Current status
 1) Deck of cards generated
 2) 6 random cards dealt into 1 hand
-3) All combinations of 15 in the first 4 cards in the hand counted and scored
-4) All pairs in the first 4 cards counted and scored
+3) All permutations of 4 cards have their total points calculated from 15s, pairs, and runs
+4) The 4 card hand(s) that yield the maximum number of points is saved and printed
