@@ -3,13 +3,6 @@ import random
 import itertools
 from collections import Counter
 
-# Build the deck of cards
-suits = 'S C H D'.split()
-values = ['']*13
-values[0],values[10],values[11],values[12] = 'A','J','Q','K'
-values[1:10] = range(2,11)
-deck = [list(tup) for tup in itertools.product(values,suits)]
-
 # Calculate the points from combinations of 15
 def fifteens(self):
     numbers = np.zeros(len(self))
@@ -76,38 +69,49 @@ def runs(self):
     else: num_runs = 0
     return run_size*num_runs
 
-# Generate a random hand of 6 cards
-dealer = random.getrandbits(1)
-hand = random.sample(deck,k=6)
-hand_values = list(range(6))
-for i in range(6):
-    hand_values[i] = hand[i][0]
+def main():
+    # Build the deck of cards
+    suits = 'S C H D'.split()
+    values = ['']*13
+    values[0],values[10],values[11],values[12] = 'A','J','Q','K'
+    values[1:10] = range(2,11)
+    deck = [list(tup) for tup in itertools.product(values,suits)]
 
-# Calculate the highest point total possible using any 4 cards in the hand
-max_hand = []
-max_net_points = 0
-to_crib = []
-for tup in itertools.combinations(hand_values,r=4):
-    hand_points = fifteens(tup) + pairs(tup) + runs(tup)
-    # Line below will remove all duplicates of a card value; FIX THIS
-    discard = set(hand_values) - set(tup)
-    print(hand_values)
-    print(discard)
-    crib_points = fifteens(discard) + pairs(discard) + runs(discard)
-    if not dealer: crib_points = -1*crib_points
-    net_points = hand_points+crib_points
-    if net_points > max_net_points:
-        max_net_points = net_points
-        max_hand = [list(tup)]
-        to_crib = [discard]
-    elif net_points == max_net_points:
-        max_hand.append(list(tup))
-        to_crib.append(discard)
+    # Generate a random hand of 6 cards
+    dealer = random.getrandbits(1)
+    hand = random.sample(deck,k=6)
+    hand_values = list(range(6))
+    for i in range(6):
+        hand_values[i] = hand[i][0]
 
-if dealer: print('Your crib')
-else: print("Opponent's crib")
-print(hand)
-print('Hand =',hand_values)
-print('Best hand =',max_hand)
-print('For crib =',to_crib)
-print('Net points =',max_net_points)
+    # Calculate the highest point total possible using any 4 cards in the hand
+    max_hand = []
+    max_net_points = 0
+    to_crib = []
+    for tup in itertools.combinations(hand_values,r=4):
+        hand_points = fifteens(tup) + pairs(tup) + runs(tup)
+        # Line below will remove all duplicates of a card value; FIX THIS
+        discard = set(hand_values) - set(tup)
+        print(hand_values)
+        print(discard)
+        crib_points = fifteens(discard) + pairs(discard) + runs(discard)
+        if not dealer: crib_points = -1*crib_points
+        net_points = hand_points+crib_points
+        if net_points > max_net_points:
+            max_net_points = net_points
+            max_hand = [list(tup)]
+            to_crib = [discard]
+        elif net_points == max_net_points:
+            max_hand.append(list(tup))
+            to_crib.append(discard)
+
+    if dealer: print('Your crib')
+    else: print("Opponent's crib")
+    print(hand)
+    print('Hand =',hand_values)
+    print('Best hand =',max_hand)
+    print('For crib =',to_crib)
+    print('Net points =',max_net_points)
+
+if __name__ == "__main__":
+    main()
