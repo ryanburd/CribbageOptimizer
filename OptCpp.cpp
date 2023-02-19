@@ -24,23 +24,24 @@ struct Deck
     int size;
 };
 
+enum Dealer {you, opponent};
+
 void build_deck(Deck&);
 string format_card(const Card&);
-void print_deck(const Deck&);
+void show_deck(const Deck&);
+int choose_dealer();
+void identify_dealer(const Dealer&);
 
 int main()
 {
-    // Build the deck of cards.
+    // Build the deck of cards. Use show_deck to view all the cards in the deck.
     Deck house;
     build_deck(house);
-    print_deck(house);
+    // show_deck(house);
 
-    /* Randomly choose the dealer between two players:
-    *  0 for self, 1 for opponent
-    */
-    // srand(time(nullptr));
-    // short dealer = rand() % 2;
-    // std::cout << dealer;
+    // Randomly choose the dealer between two players. Use identify_dealer to print who the dealer is.
+    Dealer dealer = Dealer(choose_dealer());
+    identify_dealer(dealer);
 
     return 0;
 };
@@ -126,8 +127,30 @@ string format_card(const Card& card)
     return rank_string + " of " + suit_string;
 };
 
-void print_deck(const Deck& deck)
+void show_deck(const Deck& deck)
 {
     for(Card card : deck.cards)
         std::cout << format_card(card) << std::endl;
+    std::cout << std::endl;
+};
+
+int choose_dealer()
+{
+    srand(time(nullptr));
+    int dealer = rand() % 2;
+    return dealer;
+};
+
+void identify_dealer(const Dealer& dealer)
+{
+    switch(dealer)
+    {
+        case you:
+            std::cout << "You are the dealer. You get the crib." << std::endl;
+            break;
+        case opponent:
+            std::cout << "Opponent is the dealer. They get the crib." << std::endl;
+            break;
+    };
+    std::cout << std::endl;
 };
