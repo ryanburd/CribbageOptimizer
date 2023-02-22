@@ -36,12 +36,13 @@ int choose_dealer();
 void identify_dealer(const Dealer&);
 void shuffle_deck(Deck&);
 void deal_hand(Deck&, Deck&);
+vector<Rank> get_ranks(const Deck& deck);
 vector<Deck> card_combinations(Deck&, int&);
-// void determine_best_hand(Deck&, Dealer&);
-// int calculate_points(const Deck&);
-// int calculate_fifteens(Deck&);
-// int calculate_pairs(Deck&);
-// int calculate_runs(Deck&);
+void determine_best_hand(Deck&, Dealer&);
+int calculate_rank_points(vector<Rank>&, int&);
+int calculate_fifteens(vector<Rank>&, int&);
+int calculate_pairs(vector<Rank>&, int&);
+int calculate_runs(vector<Rank>&, int&);
 
 int main()
 {
@@ -69,7 +70,7 @@ int main()
     show_deck(your_hand);
 
     // Determine which 4 cards to keep in your hand and which 2 to place in the crib. To do so, calculate the number of points you'd receive for each permutation of 4 cards from your hand + (-) the points you (opponent) would receive from the 2 remaining cards for the crib. Keep the 4 cards that result in the highest net points, and place the 2 remaining cards in the crib.
-    // determine_best_hand(your_hand, dealer);
+    determine_best_hand(your_hand, dealer);
 
     return 0;
 };
@@ -95,43 +96,43 @@ string format_card(const Card& card)
     switch(card.rank)
     {
         case ace:
-            rank_string = "Ace";
+            rank_string = "A";
             break;
         case two:
-            rank_string = "Two";
+            rank_string = "2";
             break;
         case three:
-            rank_string = "Three";
+            rank_string = "3";
             break;
         case four:
-            rank_string = "Four";
+            rank_string = "4";
             break;
         case five:
-            rank_string = "Five";
+            rank_string = "5";
             break;
         case six:
-            rank_string = "Six";
+            rank_string = "6";
             break;
         case seven:
-            rank_string = "Seven";
+            rank_string = "7";
             break;
         case eight:
-            rank_string = "Eight";
+            rank_string = "8";
             break;
         case nine:
-            rank_string = "Nine";
+            rank_string = "9";
             break;
         case ten:
-            rank_string = "Ten";
+            rank_string = "10";
             break;
         case jack:
-            rank_string = "Jack";
+            rank_string = "J";
             break;
         case queen:
-            rank_string = "Queen";
+            rank_string = "Q";
             break;
         case king:
-            rank_string = "King";
+            rank_string = "K";
             break;
     };
 
@@ -139,20 +140,20 @@ string format_card(const Card& card)
     switch(card.suit)
     {
         case spades:
-            suit_string = "Spades";
+            suit_string = "S";
             break;
         case clubs:
-            suit_string = "Clubs";
+            suit_string = "C";
             break;
         case hearts:
-            suit_string = "Hearts";
+            suit_string = "H";
             break;
         case diamonds:
-            suit_string = "Diamonds";
+            suit_string = "D";
             break;
     };
 
-    return rank_string + " of " + suit_string;
+    return rank_string + " " + suit_string;
 };
 
 void show_deck(const Deck& deck)
@@ -203,36 +204,47 @@ void deal_hand(Deck& house, Deck& hand)
     house.deck_size = house.cards.size();
 };
 
-vector<Deck> card_combinations(Deck& deck, int& cardsPerCombo)
+vector<Rank> get_ranks(const Deck& deck)
 {
-    Deck combo;
-    vector<Deck> card_combos;
+    vector<Rank> ranks;
+    for (int i = 0; i < deck.deck_size; i++)
+    {
+        ranks[i] = deck.cards[i].rank;
+    };
+
+    return ranks;
+};
+
+vector<vector<Rank>> rank_combinations(vector<Rank>& ranks, int& numRanks, int& ranksPerCombo)
+{
+    vector<Rank> combo;
+    vector<vector<Rank>> rank_combos;
 
     // We only ever need to calculate combinations of exactly 2 or 3 cards. The first two for loops loop over the possible combinations of 2 cards. An if statement allows another for loop for 3 card combinations if necessary.
-    for (int card1 = 0; card1 < deck.deck_size; card1++)
+    for (int rank1 = 0; rank1 < numRanks; rank1++)
     {
         // Add a first card to the combo.
-        combo.cards.push_back(deck.cards[card1]);
+        combo.push_back(ranks[rank1]);
 
         // Only loop over the second cards if the first card is not already at the end of the deck passed to the function.
-        if (card1 < deck.deck_size - 1)
+        if (rank1 < numRanks - 1)
         {
-            for (int card2 = card1 + 1; card2 < deck.deck_size; card2++)
+            for (int rank2 = rank1 + 1; rank2 < numRanks; rank2++)
             {
                 // Add a second card to the combo.
-                combo.cards.push_back(deck.cards[card2]);
+                combo.push_back(ranks[rank2]);
                 // If we need a combo of size 3, loop over the remaining cards as the third card.
-                if (cardsPerCombo > 2)
+                if (ranksPerCombo > 2)
                 {
                     // Only loop over the third cards if the second card is not already at the end of the deck passed to the function.
-                    if (card2 < deck.deck_size - 1)
+                    if (rank2 < numRanks - 1)
                     {
-                        for (int card3 = card2 + 1; card3 < deck.deck_size; card3++)
+                        for (int rank3 = rank2 + 1; rank3 < numRanks; rank3++)
                         {
                             // Add a third card. With the combo complete, add the combo to the vector containing all possible combos. Then remove the third card to get the next possible third card on the next loop iteration.
-                            combo.cards.push_back(deck.cards[card3]);
-                            card_combos.push_back(combo);
-                            combo.cards.pop_back();
+                            combo.push_back(ranks[rank3]);
+                            rank_combos.push_back(combo);
+                            combo.pop_back();
                         };
                     }
                     // If the second card is already at the end of the deck passed to the function, there are no more possible combos of size 3 using the current first card. Break here ends the card2 for loop and goes to the next iteration of the first card.
@@ -244,13 +256,13 @@ vector<Deck> card_combinations(Deck& deck, int& cardsPerCombo)
                 // If we need a combo of size 2, the combo is complete, so add it to the vector containing all possible combos.
                 else
                 {
-                    card_combos.push_back(combo);
+                    rank_combos.push_back(combo);
                 };
                 // Remove the second card (third card, if applicable, is already removed) to get the next possible second card on the next loop iteration.
-                combo.cards.pop_back();
+                combo.pop_back();
             };
             // Remove the first card (second and third, if applicable, cards are already removed) to get the next possible first card on the next loop iteration.
-            combo.cards.pop_back();
+            combo.pop_back();
         }
         // If the first card is at the end of the deck passed to the function, then there are no more combos left. Break here ends the card1 for loop.
         else
@@ -259,100 +271,125 @@ vector<Deck> card_combinations(Deck& deck, int& cardsPerCombo)
         };
     };
 
-    return card_combos;
+    return rank_combos;
 };
 
-// void determine_best_hand(Deck& hand, Dealer& dealer)
-// {
-//     Deck hand_cards, crib_cards;
-//     int numHandCards = 4;
-//     hand_cards.deck_size = numHandCards;
-//     crib_cards.deck_size = hand.deck_size - numHandCards;
+void determine_best_hand(Deck& deck, Dealer& dealer)
+{
+    // First, calculate the points awarded from the ranks. Get a vector of the ranks for simpler coding of the point calculations.
+    vector<Rank> ranks = get_ranks(deck);
 
-//     int hand_points, crib_points, net_points, max_points;
-//     vector<Deck> best_hands, best_cribs;
+    int numHandRanks = 4;
+    int numCribRanks = deck.deck_size - numHandRanks;
 
-//     do
-//     {
-//         // Keep the first 4 cards of the permutation in the hand.
-//         for(int i = 0; i < numHandCards; i++)
-//         {
-//             hand_cards.cards.push_back(hand.cards[i]);
-//         };
-//         // Put the remaining cards of the permutation in the crib.
-//         for(int i = numHandCards; i < hand.deck_size; i++)
-//         {
-//             crib_cards.cards.push_back(hand.cards[i]);
-//         };
+    // Get all the unique 2 card combinations that can be placed in the crib. For each unique combo, the remaining 4 cards will be kept in the hand. Looping over 2 card combos for the crib makes the code within card_combinations shorter compared to having to loop over 4 cards to keep in the hand.
+    vector<vector<Rank>> crib_combos = rank_combinations(ranks, deck.deck_size, numCribRanks);
 
-//         hand_points = calculate_points(hand_cards);
+    // Copy all the ranks into the hand ranks. The crib ranks will be removed from the hand ranks without changing the total vector of ranks.
+    vector<Rank> hand_ranks = ranks;
 
-//         // If there are 3 or more players in the game, each player only places 1 card in the crib, so no points can be awarded from the 1 card alone.
-//         if (crib_cards.deck_size == 1)
-//         {
-//             crib_points = 0;
-//         }
-//         else
-//         {
-//             crib_points = calculate_points(crib_cards);
-//         };
+    for (vector<Rank> crib_ranks : crib_combos)
+    {
+        // Remove the crib ranks from the hand ranks.
+        auto rank1_index = find(hand_ranks.begin(), hand_ranks.end(), crib_ranks[0]);
+        hand_ranks.erase(hand_ranks.begin() + std::distance(hand_ranks.begin(), rank1_index));
+        auto rank2_index = find(hand_ranks.begin(), hand_ranks.end(), crib_ranks[1]);
+        hand_ranks.erase(hand_ranks.begin() + std::distance(hand_ranks.begin(), rank2_index));
 
-//         if (dealer == you)
-//         {
-//             net_points = hand_points + crib_points;
-//         }
-//         else if (dealer == opponent)
-//         {
-//             net_points = hand_points - crib_points;
-//         };
+        int handPoints = calculate_rank_points(hand_ranks, numHandRanks);
 
-//         // If the net points from the current permutation are greater than the current maximum net points, set the maximum to the current net points, clear the best hands and best cribs, and assign the current hand cards and crib cards as the best hand and crib, respectively.
-//         if (net_points > max_points)
-//         {
-//             max_points = net_points;
-//             best_hands.clear();
-//             best_hands.push_back(hand_cards);
-//             best_cribs.clear();
-//             best_cribs.push_back(crib_cards);
-//         }
-//         // If the net points from the current permutation are equal to the current maximum net points, add the hand cards and crib cards to the vector of best hands and cribs, respectively. All hands and cribs within these vectors will result in the same total net points. Further analysis is needed to determine which of these hands/cribs the player should play.
-//         else if (net_points == max_points)
-//         {
-//             best_hands.push_back(hand_cards);
-//             best_cribs.push_back(crib_cards);
-//         };
-//     } while (std::next_permutation(hand.cards.begin(), hand.cards.end()));
+        int cribPoints, netPoints;
+
+        // If there are 3 or more players in the game, each player only places 1 card in the crib, so no points can be awarded from the 1 card alone.
+
+        if (numCribRanks == 1)
+        {
+            cribPoints = 0;
+        }
+        else
+        {
+            cribPoints = calculate_rank_points(crib_ranks, numCribRanks);
+        };
+
+        // Add (subtract) crib points to hand points if you (opponent) are the dealer.
+        if (dealer == you)
+        {
+            netPoints = handPoints + cribPoints;
+        }
+        else if (dealer == opponent)
+        {
+            netPoints = handPoints - cribPoints;
+        };
+
+        // If the net points from the current permutation are greater than the current maximum net points, set the maximum to the current net points, clear the best hands and best cribs, and assign the current hand cards and crib cards as the best hand and crib, respectively.
+        int maxPoints;
+        vector<vector<Rank>> best_hands, best_cribs;
+
+        if (netPoints > maxPoints)
+        {
+            maxPoints = netPoints;
+            best_hands.clear();
+            best_hands.push_back(hand_ranks);
+            best_cribs.clear();
+            best_cribs.push_back(crib_ranks);
+        }
+        // If the net points from the current permutation are equal to the current maximum net points, add the hand cards and crib cards to the vector of best hands and cribs, respectively. All hands and cribs within these vectors will result in the same total net points. Further analysis is needed to determine which of these hands/cribs the player should play.
+        else if (netPoints == maxPoints)
+        {
+            best_hands.push_back(hand_ranks);
+            best_cribs.push_back(crib_ranks);
+        };
+
+        // Reset the hand ranks to all the ranks so the next combo of crib ranks can be removed in the next loop iteration.
+        hand_ranks = ranks;
+    };
     
-// };
+};
 
-// int calculate_points(const Deck& deck)
-// {
-//     int fifteensPoints = calculate_fifteens(deck);
-//     int pairsPoints = calculate_pairs(deck);
-//     int runsPoints = calculate_runs(deck);
+int calculate_rank_points(vector<Rank>& ranks, int& numRanks)
+{
+    int fifteensPoints = calculate_fifteens(ranks, numRanks);
+    int pairsPoints = calculate_pairs(ranks, numRanks);
+    int runsPoints = calculate_runs(ranks, numRanks);
 
-//     int total_points = fifteensPoints + pairsPoints + runsPoints;
+    int total_points = fifteensPoints + pairsPoints + runsPoints;
 
-//     return total_points;
-// };
+    return total_points;
+};
 
-// int calculate_fifteens(Deck& deck)
-// {
-//     int numFifteens;
+int calculate_fifteens(vector<Rank>& ranks, int& numRanks)
+{
+    int numFifteens;
+    int pointsPerFifteen = 2;
 
-//     // For a crib of 2 cards, add the two cards to check if they sum to 15. If so, increment numFifteens to 1.
-//     if (deck.deck_size == 2)
-//     {
-//         if (deck.cards[0].rank + deck.cards[1].rank = 15)
-//         {
-//             numFifteens++;
-//         };
-//     }
-//     else
-//     {
-//         do
-//         {
+    // For a crib of 2 ranks, add the two ranks to check if they sum to 15. If so, increment numFifteens to 1.
+    if (numRanks == 2)
+    {
+        if (ranks[0] + ranks[1] == 15)
+        {
+            numFifteens++;
+        };
+    }
+    else
+    {
+        
+    };
 
-//         } while (std::next_permutation(deck.cards.begin(), deck.cards.end()));
-//     };
-// };
+    return numFifteens*pointsPerFifteen;
+};
+
+int calculate_pairs(vector<Rank>& ranks, int& numRanks)
+{
+    int numPairs;
+    int pointsPerPair = 2;
+
+    return numPairs*pointsPerPair;
+};
+
+int calculate_runs(vector<Rank>& ranks, int& numRanks)
+{
+    int numRuns;
+    int pointsPerRun; // Equals the size of the run.
+
+    return numRuns*pointsPerRun;
+};
