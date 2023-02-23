@@ -6,7 +6,8 @@ This repository contains an optimizer that determines the best cards for a user 
 1) Deck of cards is created.
 2) Dealer randomly determined to determine which player receives the crib.
 3) 6 cards dealt to your hand.
-4) Function written to calculate card combinations of a specified size. This function will be used in future updates to determine all possible 4 card combinations you can keep in your hand and which hand will result in the highest net total points.
+4) All possible hand and crib combinations (assuming a 2 player game with each player placing 2 cards in the crib) calculated.
+5) Points from 15s calculated (still fixing a bug).
 
 ## Current status (Python version)
 1) Deck of cards generated
