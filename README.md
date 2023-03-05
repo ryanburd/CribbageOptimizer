@@ -9,6 +9,7 @@ This repository contains an optimizer that determines the best cards for a user 
 4) Function written to calculate card combinations of a specified size. This function will be used in future updates to determine all possible 4 card combinations you can keep in your hand and which hand will result in the highest net total points.
 
 ## Current status (Python version)
+* Note: this version is in need of an update to reformat the deck and hand generation for better object-oriented programming. Currently, the C++ version is being given priority as a C++ learning exercise.
 1) Deck of cards generated
 2) 6 random cards dealt into 1 hand
 3) Randomly determine the dealer to determine which player receives the crib
