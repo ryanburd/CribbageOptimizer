@@ -37,11 +37,6 @@ void identify_dealer(const Dealer&);
 void shuffle_deck(Deck&);
 void deal_hand(Deck&, Deck&);
 vector<Deck> card_combinations(Deck&, int&);
-// void determine_best_hand(Deck&, Dealer&);
-// int calculate_points(const Deck&);
-// int calculate_fifteens(Deck&);
-// int calculate_pairs(Deck&);
-// int calculate_runs(Deck&);
 
 int main()
 {
@@ -67,9 +62,6 @@ int main()
     your_hand.deck_size = cards_per_hand;
     deal_hand(house, your_hand);
     show_deck(your_hand);
-
-    // Determine which 4 cards to keep in your hand and which 2 to place in the crib. To do so, calculate the number of points you'd receive for each permutation of 4 cards from your hand + (-) the points you (opponent) would receive from the 2 remaining cards for the crib. Keep the 4 cards that result in the highest net points, and place the 2 remaining cards in the crib.
-    // determine_best_hand(your_hand, dealer);
 
     return 0;
 };
@@ -261,98 +253,3 @@ vector<Deck> card_combinations(Deck& deck, int& cardsPerCombo)
 
     return card_combos;
 };
-
-// void determine_best_hand(Deck& hand, Dealer& dealer)
-// {
-//     Deck hand_cards, crib_cards;
-//     int numHandCards = 4;
-//     hand_cards.deck_size = numHandCards;
-//     crib_cards.deck_size = hand.deck_size - numHandCards;
-
-//     int hand_points, crib_points, net_points, max_points;
-//     vector<Deck> best_hands, best_cribs;
-
-//     do
-//     {
-//         // Keep the first 4 cards of the permutation in the hand.
-//         for(int i = 0; i < numHandCards; i++)
-//         {
-//             hand_cards.cards.push_back(hand.cards[i]);
-//         };
-//         // Put the remaining cards of the permutation in the crib.
-//         for(int i = numHandCards; i < hand.deck_size; i++)
-//         {
-//             crib_cards.cards.push_back(hand.cards[i]);
-//         };
-
-//         hand_points = calculate_points(hand_cards);
-
-//         // If there are 3 or more players in the game, each player only places 1 card in the crib, so no points can be awarded from the 1 card alone.
-//         if (crib_cards.deck_size == 1)
-//         {
-//             crib_points = 0;
-//         }
-//         else
-//         {
-//             crib_points = calculate_points(crib_cards);
-//         };
-
-//         if (dealer == you)
-//         {
-//             net_points = hand_points + crib_points;
-//         }
-//         else if (dealer == opponent)
-//         {
-//             net_points = hand_points - crib_points;
-//         };
-
-//         // If the net points from the current permutation are greater than the current maximum net points, set the maximum to the current net points, clear the best hands and best cribs, and assign the current hand cards and crib cards as the best hand and crib, respectively.
-//         if (net_points > max_points)
-//         {
-//             max_points = net_points;
-//             best_hands.clear();
-//             best_hands.push_back(hand_cards);
-//             best_cribs.clear();
-//             best_cribs.push_back(crib_cards);
-//         }
-//         // If the net points from the current permutation are equal to the current maximum net points, add the hand cards and crib cards to the vector of best hands and cribs, respectively. All hands and cribs within these vectors will result in the same total net points. Further analysis is needed to determine which of these hands/cribs the player should play.
-//         else if (net_points == max_points)
-//         {
-//             best_hands.push_back(hand_cards);
-//             best_cribs.push_back(crib_cards);
-//         };
-//     } while (std::next_permutation(hand.cards.begin(), hand.cards.end()));
-    
-// };
-
-// int calculate_points(const Deck& deck)
-// {
-//     int fifteensPoints = calculate_fifteens(deck);
-//     int pairsPoints = calculate_pairs(deck);
-//     int runsPoints = calculate_runs(deck);
-
-//     int total_points = fifteensPoints + pairsPoints + runsPoints;
-
-//     return total_points;
-// };
-
-// int calculate_fifteens(Deck& deck)
-// {
-//     int numFifteens;
-
-//     // For a crib of 2 cards, add the two cards to check if they sum to 15. If so, increment numFifteens to 1.
-//     if (deck.deck_size == 2)
-//     {
-//         if (deck.cards[0].rank + deck.cards[1].rank = 15)
-//         {
-//             numFifteens++;
-//         };
-//     }
-//     else
-//     {
-//         do
-//         {
-
-//         } while (std::next_permutation(deck.cards.begin(), deck.cards.end()));
-//     };
-// };
