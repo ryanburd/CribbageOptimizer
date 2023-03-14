@@ -254,57 +254,39 @@ vector<vector<Rank>> rank_combinations(vector<Rank>& ranks, int& numRanks, int& 
     vector<Rank> combo;
     vector<vector<Rank>> rank_combos;
 
-    // We only ever need to calculate combinations of exactly 2 or 3 cards. The first two for loops loop over the possible combinations of 2 cards. An if statement allows another for loop for 3 card combinations if necessary.
     for (int rank1 = 0; rank1 < numRanks; rank1++)
     {
-        // Add a first card to the combo.
+        // Add rank1 to the current combo.
         combo.push_back(ranks[rank1]);
-
-        // Only loop over the second cards if the first card is not already at the end of the deck passed to the function.
-        if (rank1 < numRanks - 1)
+        for (int rank2 = rank1 + 1; rank2 < numRanks; rank2++)
         {
-            for (int rank2 = rank1 + 1; rank2 < numRanks; rank2++)
+            // Add rank2 to the current combo.
+            combo.push_back(ranks[rank2]);
+            // If we need a combo of 3 ranks, loop over rank3.
+            if (ranksPerCombo > 2)
             {
-                // Add a second card to the combo.
-                combo.push_back(ranks[rank2]);
-                // If we need a combo of size 3, loop over the remaining cards as the third card.
-                if (ranksPerCombo > 2)
+                for (int rank3 = rank2 + 1; rank3 < numRanks; rank3++)
                 {
-                    // Only loop over the third cards if the second card is not already at the end of the deck passed to the function.
-                    if (rank2 < numRanks - 1)
-                    {
-                        for (int rank3 = rank2 + 1; rank3 < numRanks; rank3++)
-                        {
-                            // Add a third card. With the combo complete, add the combo to the vector containing all possible combos. Then remove the third card to get the next possible third card on the next loop iteration.
-                            combo.push_back(ranks[rank3]);
-                            rank_combos.push_back(combo);
-                            combo.pop_back();
-                        };
-                    }
-                    // If the second card is already at the end of the deck passed to the function, there are no more possible combos of size 3 using the current first card. Break here ends the card2 for loop and goes to the next iteration of the first card.
-                    else
-                    {
-                        break;
-                    };
-                }
-                // If we need a combo of size 2, the combo is complete, so add it to the vector containing all possible combos.
-                else
-                {
+                    // Add rank3, finishing the current combo. Add the combo to the vector of combos and remove rank3 to get the next combo.
+                    combo.push_back(ranks[rank3]);
                     rank_combos.push_back(combo);
+                    combo.pop_back();
                 };
-                // Remove the second card (third card, if applicable, is already removed) to get the next possible second card on the next loop iteration.
+                // When done looping over the rank3's, remove the current rank2 to get the next combo.
+                combo.pop_back();
+            }
+            else
+            {
+                // If we only need combos of 2 ranks, the combo is finished. Add it to the vector of combos and remove rank2 to get the next combo.
+                rank_combos.push_back(combo);
                 combo.pop_back();
             };
-            // Remove the first card (second and third, if applicable, cards are already removed) to get the next possible first card on the next loop iteration.
-            combo.pop_back();
-        }
-        // If the first card is at the end of the deck passed to the function, then there are no more combos left. Break here ends the card1 for loop.
-        else
-        {
-            break;
         };
+        // Remove rank1 to get the next combo.
+        combo.pop_back();
     };
 
+    // Return the vector containing all the possible rank combos.
     return rank_combos;
 };
 
@@ -377,9 +359,6 @@ void determine_best_hand(Deck& deck, Dealer& dealer)
 
         // Reset the hand ranks to all the ranks so the next combo of crib ranks can be removed in the next loop iteration.
         hand_ranks = ranks;
-        // handPoints = 0;
-        // cribPoints = 0;
-        // netPoints = 0;
     };
     print_best_hand(best_hands, maxPoints);
 };
@@ -387,12 +366,19 @@ void determine_best_hand(Deck& deck, Dealer& dealer)
 void print_best_hand(vector<vector<Rank>>& best_hands, int& maxPoints)
 {
     std::cout << "Maximum points = " << maxPoints << std::endl;
-    std::cout << "Cards to keep in your hand:" << std::endl;
-    for (vector<Rank> hand : best_hands)
+    if (maxPoints == 0)
     {
-        print_ranks(hand);
+        std::cout << "No points possible." << std::endl;
+    }
+    else
+    {
+        std::cout << "Cards to keep in your hand:" << std::endl;
+        for (vector<Rank> hand : best_hands)
+        {
+            print_ranks(hand);
+        };
+        std::cout << std::endl;
     };
-    std::cout << std::endl;
 };
 
 int calculate_rank_points(vector<Rank>& ranks, int& numRanks)
@@ -439,7 +425,15 @@ int calculate_fifteens(vector<Rank>& original_ranks, int& numRanks)
         for (int ranksPerCombo = 2; ranksPerCombo < numRanks + 1; ranksPerCombo++)
         {
             // Get all possible combos of the ranks.
-            vector<vector<Rank>> rank_combos = rank_combinations(ranks, numRanks, ranksPerCombo);
+            vector<vector<Rank>> rank_combos;
+            if (ranksPerCombo == 4)
+            {
+                rank_combos = {ranks};
+            }
+            else
+            {
+                rank_combos = rank_combinations(ranks, numRanks, ranksPerCombo);
+            };
 
             // Calculate the sum of the ranks for each combo. Increment numFifteens if the sum = 15.
             for (vector<Rank> combo : rank_combos)
