@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <map>
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
@@ -22,43 +23,43 @@ string format_rank(Rank rank)
     switch(rank)
     {
         case ace:
-            rank_string = "A";
+            rank_string = " A";
             break;
         case two:
-            rank_string = "2";
+            rank_string = " 2";
             break;
         case three:
-            rank_string = "3";
+            rank_string = " 3";
             break;
         case four:
-            rank_string = "4";
+            rank_string = " 4";
             break;
         case five:
-            rank_string = "5";
+            rank_string = " 5";
             break;
         case six:
-            rank_string = "6";
+            rank_string = " 6";
             break;
         case seven:
-            rank_string = "7";
+            rank_string = " 7";
             break;
         case eight:
-            rank_string = "8";
+            rank_string = " 8";
             break;
         case nine:
-            rank_string = "9";
+            rank_string = " 9";
             break;
         case ten:
             rank_string = "10";
             break;
         case jack:
-            rank_string = "J";
+            rank_string = " J";
             break;
         case queen:
-            rank_string = "Q";
+            rank_string = " Q";
             break;
         case king:
-            rank_string = "K";
+            rank_string = " K";
             break;
     };
 
@@ -173,8 +174,10 @@ int choose_dealer();
 void identify_dealer(const Dealer&);
 void print_ranks(vector<Rank>&);
 vector<vector<Rank>> rank_combinations(vector<Rank>&, int&, int&);
+std::map<Rank, int> count_duplicates(vector<Rank>);
+vector<Rank> remove_duplicates(std::map<Rank, int>&);
 void determine_best_hand(Deck&, Dealer&);
-void print_best_hand(vector<vector<Rank>>&, int&);
+void print_best_hand(vector<vector<Rank>>&, vector<vector<Rank>>&, int&);
 int calculate_rank_points(vector<Rank>&, int&);
 int calculate_fifteens(vector<Rank>&, int&);
 int calculate_pairs(vector<Rank>&, int&);
@@ -239,13 +242,20 @@ void print_ranks(vector<Rank>& ranks)
 {
     string rank_string;
 
+    bool first_rank = true;
     for (Rank rank : ranks)
     {
         rank_string = format_rank(rank);
-        std::cout << rank_string << ", ";
+        if (first_rank)
+        {
+            std::cout << rank_string;
+            first_rank = false;
+        }
+        else
+        {
+            std::cout << ", " << rank_string;
+        };
     };
-
-    std::cout << std::endl;
 };
 
 // Return all possible combinations of ranks with the combo size passed from the passed vector of ranks.
@@ -288,6 +298,33 @@ vector<vector<Rank>> rank_combinations(vector<Rank>& ranks, int& numRanks, int& 
 
     // Return the vector containing all the possible rank combos.
     return rank_combos;
+};
+
+std::map<Rank, int> count_duplicates(vector<Rank> ranks)
+{
+    // Sort the ranks, in case they weren't already. Needed for the steps below.
+    std::sort(ranks.begin(), ranks.end());
+    
+    // Create a map that stores the count of each rank within the passed hand.
+    std::map<Rank, int> rank_counts;
+    for (Rank rank : ranks)
+    {
+        rank_counts[rank]++;
+    };
+    
+    return rank_counts;
+};
+
+vector<Rank> remove_duplicates(std::map<Rank, int>& rank_counts)
+{
+    // Create a vector containing each unique rank within the passed hand only once.
+    vector<Rank> unique_ranks;
+    for (std::map<Rank, int>::iterator it = rank_counts.begin(); it != rank_counts.end(); it++)
+    {
+        unique_ranks.push_back(it->first);
+    };
+
+    return unique_ranks;
 };
 
 void determine_best_hand(Deck& deck, Dealer& dealer)
@@ -360,22 +397,28 @@ void determine_best_hand(Deck& deck, Dealer& dealer)
         // Reset the hand ranks to all the ranks so the next combo of crib ranks can be removed in the next loop iteration.
         hand_ranks = ranks;
     };
-    print_best_hand(best_hands, maxPoints);
+
+    // Show the maximum net points and all the hands that award that number of points.
+    print_best_hand(best_hands, best_cribs, maxPoints);
 };
 
-void print_best_hand(vector<vector<Rank>>& best_hands, int& maxPoints)
+void print_best_hand(vector<vector<Rank>>& best_hands, vector<vector<Rank>>& best_cribs, int& maxPoints)
 {
-    std::cout << "Maximum points = " << maxPoints << std::endl;
+    std::cout << "Maximum net points = " << maxPoints << std::endl;
     if (maxPoints == 0)
     {
         std::cout << "No points possible." << std::endl;
     }
     else
     {
-        std::cout << "Cards to keep in your hand:" << std::endl;
-        for (vector<Rank> hand : best_hands)
+        std::cout << "Cards to keep (discard):" << std::endl;
+        int numHands = best_hands.size();
+        for (int hand = 0; hand < numHands; hand++)
         {
-            print_ranks(hand);
+            print_ranks(best_hands[hand]);
+            std::cout << " (";
+            print_ranks(best_cribs[hand]);
+            std::cout << ")" << std::endl;
         };
         std::cout << std::endl;
     };
@@ -458,10 +501,31 @@ int calculate_fifteens(vector<Rank>& original_ranks, int& numRanks)
 
 int calculate_pairs(vector<Rank>& ranks, int& numRanks)
 {
-    int numPairs = 0;
-    int pointsPerPair = 2;
+    // Create variables to store the number of pairs, 3-of-a-kinds (3OAKs), and 4-of-a-kinds (4OAKs).
+    int numPairs = 0, num3OAKs = 0, num4OAKs = 0;
 
-    return numPairs*pointsPerPair;
+    // Define the points awarded for each pair, 3OAK, 4OAK. Note that while we only need to use the ranks for this calculation, each rank is associated with a card with a unique suit. When factoring in the suits, a 3OAK contains 3 unique pairs and so awards 6 points (2 points for each pair). A 4OAK contains 6 unique pairs and so awards 12 points.
+    int ptsPerPair = 2, ptsPer3OAK = 6, ptsPer4OAK = 12;
+
+    // Count the number of each unqiue ranks within the passed hand. The count of each rank then easily identifies pairs, 3OAKs, and 4OAKs. Loop over the rank counts and increment the appropriate pair/3OAK/4OAK counter.
+    std::map<Rank, int> rank_counts = count_duplicates(ranks);
+    for (std::map<Rank, int>::iterator it = rank_counts.begin(); it != rank_counts.end(); it++)
+    {
+        if (it->second == 2)
+        {
+            numPairs++;
+        }
+        else if (it->second == 3)
+        {
+            num3OAKs++;
+        }
+        else if (it->second == 4)
+        {
+            num4OAKs++;
+        };
+    };
+
+    return numPairs*ptsPerPair + num3OAKs*ptsPer3OAK + num4OAKs*ptsPer4OAK;
 };
 
 int calculate_runs(vector<Rank>& ranks, int& numRanks)
