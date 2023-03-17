@@ -9,6 +9,7 @@ This repository contains an optimizer that determines the best cards for a user 
 4) All possible hand and crib combinations (assuming a 2 player game with each player placing 2 cards in the crib) calculated.
 5) Points from 15s calculated.
 6) Points from pairs calculated.
+7) Points from runs calculated.
 
 ## Current status (Python version)
 1) Deck of cards generated

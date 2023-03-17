@@ -125,6 +125,21 @@ struct Deck
         deck_size = cards.size();
     };
 
+    // Build a custom hand with cards of your choosing.
+    void enter_hand()
+    {
+        int ranks[] = {1, 2, 3, 5, 6, 7};
+        int suits[] = {0, 0, 0, 0, 0, 0};
+        for(int i = 0; i < sizeof(ranks)/sizeof(int); i++)
+        {
+            Card card;
+            card.rank = Rank(ranks[i]);
+            card.suit = Suit(suits[i]);
+            cards.push_back(card);
+        };
+        deck_size = cards.size();
+    };
+
     // Print the deck.
     void show_deck()
     {
@@ -188,9 +203,10 @@ int main()
     // Print new line for visual purposes.
     std::cout << std::endl;
 
-    // Build the deck of cards. Use show_deck() to view all the cards in the deck.
+    // Build the deck of cards. Use enter_hand() to define 6 cards of your choosing as the hand. Use show_deck() to view all the cards in the deck.
     Deck house;
     house.build_deck();
+    // house.enter_hand();
     // house.show_deck();
 
     // Randomly choose the dealer between two players. Use identify_dealer() to print who the dealer is.
@@ -530,8 +546,64 @@ int calculate_pairs(vector<Rank>& ranks, int& numRanks)
 
 int calculate_runs(vector<Rank>& ranks, int& numRanks)
 {
-    int numRuns = 0;
-    int pointsPerRun; // Equals the size of the run.
+    int numRuns;
+    int pointsPerRun; // Will equal the size of the run.
+
+    // Get a count of each unique rank in the hand and remove duplicates so we're left with a vector of only uniqur ranks.
+    std::map<Rank, int> rank_counts = count_duplicates(ranks);
+    vector<Rank> unique_ranks = remove_duplicates(rank_counts);
+
+    // Starting at the end of the unique ranks, check if each is exactly 1 higher than the rank before it. If so, increment the run size and add the current and previous rank to the vector of run ranks (if the ranks are not already in the vector).
+    int runSize = 1;
+    vector<Rank> run_ranks;
+    for (int i = unique_ranks.size()-1; i > 0; i--)
+    {
+        if (unique_ranks[i] == unique_ranks[i-1] + 1)
+        {
+            runSize++;
+            if (std::find(run_ranks.begin(), run_ranks.end(), unique_ranks[i]) != run_ranks.end())
+            {
+            }
+            else
+            {
+                run_ranks.push_back(unique_ranks[i]);
+            };
+            if (std::find(run_ranks.begin(), run_ranks.end(), unique_ranks[i-1]) != run_ranks.end())
+            {
+            }
+            else
+            {
+                run_ranks.push_back(unique_ranks[i-1]);
+            };
+        }
+        // If a rank is more than 1 rank higher than its preceeding rank, reset the run size and vector of run ranks.
+        else
+        {
+            runSize = 1;
+            run_ranks.clear();
+        };
+    };
+
+    // If the run size is greater than or equal to 3, set the points per run to the run size. Check if any of the ranks within the run had duplicates in the hand. Each duplicate increases the number of runs by 1.
+    if (runSize >= 3)
+    {
+        numRuns = 1;
+        pointsPerRun = runSize;
+        int numRunDuplicates;
+        for (Rank rank : run_ranks)
+        {
+            if (rank_counts[rank] > 1)
+            {
+                numRuns = numRuns + rank_counts[rank]-1;
+                numRunDuplicates++;
+                // In a 5 card hand, if there are 2 unique duplicates, then we need to add another run for when both duplicates are used to make a run.
+                if (numRunDuplicates == 2)
+                {
+                    numRuns++;
+                };
+            };
+        };
+    };
 
     return numRuns*pointsPerRun;
 };
